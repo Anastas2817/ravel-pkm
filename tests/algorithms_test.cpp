@@ -6,7 +6,6 @@
 
 #include <gtest/gtest.h>
 
-using ravel::CycleHint;
 using ravel::FindCycleHints;
 using ravel::Graph;
 using ravel::NodeId;
@@ -44,11 +43,11 @@ TEST(FindCycleHints, TriangleYieldsSingleHintInTraversalOrder) {
   const RelationId bc = g.AddRelation(b, c, "is_a");
   const RelationId ca = g.AddRelation(c, a, "is_a");
 
-  const std::vector<CycleHint> hints = FindCycleHints(g);
+  const std::vector<std::vector<RelationId>> hints = FindCycleHints(g);
   ASSERT_EQ(hints.size(), 1);
-  EXPECT_EQ(hints[0].type, "is_a");
+  EXPECT_EQ(g.GetRelation(hints[0][0]).type(), "is_a");
   // Порядок обхода: первое ребро выходит из a, замыкающее — последнее.
-  EXPECT_EQ(hints[0].edges, (std::vector<RelationId>{ab, bc, ca}));
+  EXPECT_EQ(hints[0], (std::vector<RelationId>{ab, bc, ca}));
 }
 
 TEST(FindCycleHints, TwoIndependentCyclesAreSeparateHints) {
@@ -64,18 +63,18 @@ TEST(FindCycleHints, TwoIndependentCyclesAreSeparateHints) {
   const RelationId cd = g.AddRelation(c, d, "is_a");
   const RelationId dc = g.AddRelation(d, c, "is_a");
 
-  const std::vector<CycleHint> hints = FindCycleHints(g);
+  const std::vector<std::vector<RelationId>> hints = FindCycleHints(g);
   ASSERT_EQ(hints.size(), 2);
-  EXPECT_EQ(hints[0].type, "is_a");
-  EXPECT_EQ(hints[1].type, "is_a");
+  for (const std::vector<RelationId>& hint : hints) {
+    EXPECT_EQ(g.GetRelation(hint[0]).type(), "is_a");
+  }
   // Детерминизм: сканирование s по возрастанию id, порядок hint'ов стабилен.
-  EXPECT_EQ(hints[0].edges, (std::vector<RelationId>{ab, ba}));
-  EXPECT_EQ(hints[1].edges, (std::vector<RelationId>{cd, dc}));
-  const std::vector<CycleHint> again = FindCycleHints(g);
+  EXPECT_EQ(hints[0], (std::vector<RelationId>{ab, ba}));
+  EXPECT_EQ(hints[1], (std::vector<RelationId>{cd, dc}));
+  const std::vector<std::vector<RelationId>> again = FindCycleHints(g);
   ASSERT_EQ(again.size(), hints.size());
   for (size_t i = 0; i < hints.size(); ++i) {
-    EXPECT_EQ(again[i].type, hints[i].type);
-    EXPECT_EQ(again[i].edges, hints[i].edges);
+    EXPECT_EQ(again[i], hints[i]);
   }
 }
 
@@ -91,17 +90,17 @@ TEST(FindCycleHints, ParallelEdgesProduceSeparateHints) {
   const RelationId bc = g.AddRelation(b, c, "is_a");
   const RelationId ca = g.AddRelation(c, a, "is_a");
 
-  const std::vector<CycleHint> hints = FindCycleHints(g);
+  const std::vector<std::vector<RelationId>> hints = FindCycleHints(g);
   // Один и тот же цикл, но параллельные рёбра A->B дают две материализации.
   ASSERT_EQ(hints.size(), 2);
-  for (const CycleHint& hint : hints) {
-    EXPECT_EQ(hint.type, "is_a");
-    ASSERT_EQ(hint.edges.size(), 3);
-    EXPECT_EQ(hint.edges[1], bc);
-    EXPECT_EQ(hint.edges[2], ca);
+  for (const std::vector<RelationId>& hint : hints) {
+    EXPECT_EQ(g.GetRelation(hint[0]).type(), "is_a");
+    ASSERT_EQ(hint.size(), 3);
+    EXPECT_EQ(hint[1], bc);
+    EXPECT_EQ(hint[2], ca);
   }
-  EXPECT_EQ(hints[0].edges[0], ab1);
-  EXPECT_EQ(hints[1].edges[0], ab2);
+  EXPECT_EQ(hints[0][0], ab1);
+  EXPECT_EQ(hints[1][0], ab2);
 }
 
 TEST(FindCycleHints, CyclesAreDetectedPerRelationType) {
@@ -117,10 +116,10 @@ TEST(FindCycleHints, CyclesAreDetectedPerRelationType) {
   const RelationId bc = g.AddRelation(b, c, "is_a");
   const RelationId cb = g.AddRelation(c, b, "is_a");  // цикл только внутри is_a
 
-  const std::vector<CycleHint> hints = FindCycleHints(g);
+  const std::vector<std::vector<RelationId>> hints = FindCycleHints(g);
   ASSERT_EQ(hints.size(), 1);
-  EXPECT_EQ(hints[0].type, "is_a");
-  EXPECT_EQ(hints[0].edges, (std::vector<RelationId>{bc, cb}));
+  EXPECT_EQ(g.GetRelation(hints[0][0]).type(), "is_a");
+  EXPECT_EQ(hints[0], (std::vector<RelationId>{bc, cb}));
 }
 
 TEST(FindCycleHints, SelfLoopIsSingleEdgeHint) {
@@ -130,10 +129,10 @@ TEST(FindCycleHints, SelfLoopIsSingleEdgeHint) {
   const NodeId a = g.AddNode("A", "model");
   const RelationId aa = g.AddRelation(a, a, "is_a");
 
-  const std::vector<CycleHint> hints = FindCycleHints(g);
+  const std::vector<std::vector<RelationId>> hints = FindCycleHints(g);
   ASSERT_EQ(hints.size(), 1);
-  EXPECT_EQ(hints[0].type, "is_a");
-  EXPECT_EQ(hints[0].edges, (std::vector<RelationId>{aa}));
+  EXPECT_EQ(g.GetRelation(hints[0][0]).type(), "is_a");
+  EXPECT_EQ(hints[0], (std::vector<RelationId>{aa}));
 }
 
 TEST(FindCycleHints, SymmetricTypesAreExcluded) {

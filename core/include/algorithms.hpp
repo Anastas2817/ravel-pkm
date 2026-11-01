@@ -3,17 +3,11 @@
 
 #include "graph.hpp"
 
-#include <string>
 #include <vector>
 
 namespace ravel {
 
-struct CycleHint {
-  std::string type;
-  std::vector<RelationId> edges;
-};
-
-std::vector<CycleHint> FindCycleHints(const Graph& g);
+std::vector<std::vector<RelationId>> FindCycleHints(const Graph& g);
 
 }  // namespace ravel
 

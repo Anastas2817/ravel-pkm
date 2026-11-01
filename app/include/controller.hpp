@@ -1,6 +1,7 @@
 #ifndef RAVEL_APP_INCLUDE_CONTROLLER_HPP_
 #define RAVEL_APP_INCLUDE_CONTROLLER_HPP_
 
+#include "algorithms.hpp"
 #include "command.hpp"
 #include "storage.hpp"
 
@@ -64,6 +65,8 @@ class Controller {
   std::vector<RelationView> Relations() const;
   std::optional<RelationView> FindRelation(ravel::RelationId id) const;
   std::vector<std::string> RelationTypeNames() const;
+
+  std::vector<std::vector<RelationId>> CycleHints() const;
 
  private:
   struct SessionState {

@@ -191,4 +191,8 @@ std::vector<std::string> Controller::RelationTypeNames() const {
   return result;
 }
 
+std::vector<std::vector<RelationId>> Controller::CycleHints() const {
+  return FindCycleHints(s_.g);
+}
+
 }  // namespace ravel::app

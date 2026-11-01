@@ -64,7 +64,7 @@ bool Advance(std::vector<RelationId>& combo, std::vector<size_t>& index,
 // materialize into separate hints. The product is walked as an odometer:
 // start from the first candidate of each edge, then advance until exhausted.
 void EmitHints(const Graph& g, const std::string& key, const std::vector<Edge>& path,
-               NodeId back_from, NodeId back_to, std::vector<CycleHint>& result) {
+               NodeId back_from, NodeId back_to, std::vector<std::vector<RelationId>>& result) {
   std::vector<std::vector<RelationId>> choices;
   choices.reserve(path.size() + 1);
   for (const Edge& e : path) {
@@ -80,9 +80,9 @@ void EmitHints(const Graph& g, const std::string& key, const std::vector<Edge>& 
     }
     combo[i] = choices[i][0];
   }
-  result.push_back(CycleHint{key, combo});
+  result.push_back(std::vector<RelationId>{combo});
   while (Advance(combo, index, choices)) {
-    result.push_back(CycleHint{key, combo});
+    result.push_back(std::vector<RelationId>{combo});
   }
 }
 
@@ -90,7 +90,8 @@ void EmitHints(const Graph& g, const std::string& key, const std::vector<Edge>& 
 // of tree edges from u up to v, reversed into traversal order, and let the
 // closing edge go last.
 void HandleBackEdge(const Graph& g, const std::string& key, NodeId v, NodeId u,
-                    const std::vector<NodeId>& parent, std::vector<CycleHint>& result) {
+                    const std::vector<NodeId>& parent,
+                    std::vector<std::vector<RelationId>>& result) {
   std::vector<Edge> path;
   for (NodeId cur = v; cur != u; cur = parent[cur]) {
     path.push_back({parent[cur], cur});
@@ -102,7 +103,7 @@ void HandleBackEdge(const Graph& g, const std::string& key, NodeId v, NodeId u,
 // Iterative DFS over one type-subgraph; back edges become cycle hints.
 void ExploreFrom(const Graph& g, const std::string& key,
                  const std::vector<std::vector<NodeId>>& adj, NodeId s, std::vector<VColor>& color,
-                 std::vector<NodeId>& parent, std::vector<CycleHint>& result) {
+                 std::vector<NodeId>& parent, std::vector<std::vector<RelationId>>& result) {
   std::vector<Frame> stack;
   stack.reserve(adj.size());
   stack.push_back({s, 0, Phase::Enter});
@@ -138,8 +139,8 @@ void ExploreFrom(const Graph& g, const std::string& key,
 
 }  // namespace
 
-std::vector<CycleHint> FindCycleHints(const Graph& g) {
-  std::vector<CycleHint> result;
+std::vector<std::vector<RelationId>> FindCycleHints(const Graph& g) {
+  std::vector<std::vector<RelationId>> result;
   for (const std::string& key : g.ontology_relation() | std::views::keys) {
     if (g.ResolveRelation(key).symmetric()) {
       continue;  // a cycle among symmetric relations is not an anomaly
