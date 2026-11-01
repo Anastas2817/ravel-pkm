@@ -136,6 +136,21 @@ TEST(FindCycleHints, SelfLoopIsSingleEdgeHint) {
   EXPECT_EQ(hints[0].edges, (std::vector<RelationId>{aa}));
 }
 
+TEST(FindCycleHints, SymmetricTypesAreExcluded) {
+  Graph g;
+  g.AddNodeType("model", "#4a90d9", "rect", "#000000");
+  g.AddRelationType("isomorphic_to", "#c94f4f", "solid", true, false);
+  const NodeId a = g.AddNode("A", "model");
+  const NodeId b = g.AddNode("B", "model");
+  const NodeId c = g.AddNode("C", "model");
+  g.AddRelation(a, b, "isomorphic_to");
+  g.AddRelation(b, a, "isomorphic_to");  // двунаправленность в данных
+  g.AddRelation(b, c, "isomorphic_to");
+  g.AddRelation(c, a, "isomorphic_to");  // треугольник — тоже не цикл
+
+  EXPECT_TRUE(FindCycleHints(g).empty());
+}
+
 TEST(GraphResolveRelationIds, LookupValidationAndEmptyMatch) {
   Graph g;
   g.AddNodeType("model", "#4a90d9", "rect", "#000000");

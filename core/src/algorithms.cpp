@@ -141,6 +141,9 @@ void ExploreFrom(const Graph& g, const std::string& key,
 std::vector<CycleHint> FindCycleHints(const Graph& g) {
   std::vector<CycleHint> result;
   for (const std::string& key : g.ontology_relation() | std::views::keys) {
+    if (g.ResolveRelation(key).symmetric()) {
+      continue;  // a cycle among symmetric relations is not an anomaly
+    }
     const std::vector<std::vector<NodeId>> adj = BuildAdjacency(g, key);
     const NodeId n = static_cast<NodeId>(adj.size());
     std::vector<VColor> color(n, VColor::Unvisited);
