@@ -18,8 +18,8 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
   const std::string input(reinterpret_cast<const char*>(data), size);
   std::istringstream in(input);
   try {
-    const ravel::GraphSnapshot snapshot = ravel::JsonStorage::Load(in);
-    const ravel::Graph graph = ravel::Graph::FromSnapshot(snapshot);
+    const ravel::FileDoc doc = ravel::JsonStorage::Load(in);
+    const ravel::Graph graph = ravel::Graph::FromSnapshot(doc.snapshot);
     (void)graph;
   } catch (...) {
     // Malformed input is rejected by design — not a crash.

@@ -71,7 +71,7 @@ class Controller {
   std::vector<std::string> RelationTypeNames() const;
 
   std::vector<std::vector<RelationId>> CycleHints();
-  void MarkCycleAllowed(std::vector<RelationId> hint) {
+  void MarkCycleAllowed(const std::vector<RelationId>& hint) {
     s_.allowed_cycles.push_back(hint);
   }
 

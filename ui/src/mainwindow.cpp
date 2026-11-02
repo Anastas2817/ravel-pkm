@@ -411,7 +411,7 @@ void MainWindow::RefreshCycleHints() {
     }
   }
   for (FireFly* ff : dead) {
-     RetireFireFly(ff);
+    RetireFireFly(ff);
   }
 
   for (const std::vector<ravel::RelationId>& hint : hints) {
@@ -477,11 +477,10 @@ void MainWindow::CreateFireFly(const std::vector<std::uint64_t>& hint) {
   // item's mouse grabber, and deleting it from inside the event handler
   // would leave a dangling grabber (crash at scene destruction).
   ff->on_clicked = [this, ff] {
-     QTimer::singleShot(0, this, [this, ff] { OnFireFlyClicked(ff); });
+    QTimer::singleShot(0, this, [this, ff] { OnFireFlyClicked(ff); });
   };
   flight->start();
 }
-
 
 void MainWindow::RetireFireFly(FireFly* ff) {
   const FlyAnims anims = fire_flies_.take(ff);
@@ -503,7 +502,6 @@ void MainWindow::RetireFireFly(FireFly* ff) {
   delete ff;
 }
 
-
 void MainWindow::OnFireFlyClicked(FireFly* ff) {
   // "Нет" — кнопка по умолчанию: пометка необратима до удаления рёбер, Enter
   // не должен срабатывать случайно.
@@ -522,6 +520,5 @@ void MainWindow::OnFireFlyClicked(FireFly* ff) {
   }
   RetireFireFly(ff);
 }
-
 
 }  // namespace ravel::ui
