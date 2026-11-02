@@ -22,8 +22,8 @@ class Graph {
   +ForEachLiveNode / ForEachLiveRelation
   +SessionEqual
   --
-  -ontology_node_ : unordered_map<string, NodeType>
-  -ontology_relation_ : unordered_map<string, RelationType>
+  -ontology_node_ : map<string, NodeType>
+  -ontology_relation_ : map<string, RelationType>
   -nodes_ : vector<Node>
   -relations_ : vector<Relation>
   -access_ : map<NodeId, vector<RelationId>>
@@ -66,8 +66,8 @@ class RelationType {
 }
 
 class GraphSnapshot {
-  +ontology_node : unordered_map<string, NodeType>
-  +ontology_relation : unordered_map<string, RelationType>
+  +ontology_node : map<string, NodeType>
+  +ontology_relation : map<string, RelationType>
   +nodes : vector<Node>
   +relations : vector<Relation>
   +next_id_node / next_id_relation

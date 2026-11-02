@@ -189,7 +189,7 @@ jobs:
   # Покрытие строк core/storage/app + гейт. --coverage = -fprofile-arcs
   # -ftest-coverage (gcov) для компиляции и линковки. Отчёт и гейт — gcovr;
   # фильтр ограничивает отчёт нашими исходниками (без gtest/_deps).
-  # Порог 75 — стартовый «не ниже измеренного»: поднимать по итогам прогонов.
+  # Порог 85 — стартовый «не ниже измеренного»: поднимать по итогам прогонов.
   coverage:
     name: coverage (Ubuntu · GCC · gcovr)
     runs-on: ubuntu-latest
