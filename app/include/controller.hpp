@@ -44,7 +44,11 @@ class Controller {
  public:
   ControllerResult Open(const std::filesystem::path& p);
   ControllerResult Save();
-  ControllerResult SaveAs(const std::filesystem::path& p);
+  // By value on purpose: Save() passes s_.file_path.value(), and a reference
+  // parameter would alias into s_ — `s_.file_path = p` at the end would then
+  // copy from the value just destroyed (optional destroys before copying),
+  // leaving a {nullptr, non-zero} wstring that trips the debug heap at close.
+  ControllerResult SaveAs(std::filesystem::path p);
 
   CommandResult AddNode(std::string title, std::string type, std::string description = "",
                         double size = 1, std::optional<ravel::Position> position = std::nullopt);

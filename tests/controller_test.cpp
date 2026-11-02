@@ -115,6 +115,21 @@ TEST_F(ControllerIoTest, OpenThenSaveWithoutExplicitPath) {
   ASSERT_TRUE(c.Save().has_value());
 }
 
+// Регрессия: Save() передаёт в SaveAs ссылку на s_.file_path.value() —
+// самоприсваивание внутри (optional уничтожает значение до копирования)
+// оставляло {nullptr, non-zero} wstring, падавшую в дебаг-куче при закрытии.
+// Повторный Save + разрушение контроллера под отладочной кучей ловит баг.
+TEST_F(ControllerIoTest, RepeatedSaveKeepsFilePathValid) {
+  WriteGraphWithOntology(source_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(source_path_).has_value());
+  ASSERT_TRUE(c.Save().has_value());
+  ASSERT_TRUE(c.Save().has_value());
+  ravel::app::Controller c2;
+  ASSERT_TRUE(c2.Open(source_path_).has_value());
+  ASSERT_TRUE(c2.Save().has_value());
+}
+
 TEST_F(ControllerIoTest, SaveAsToMissingDirectoryReturnsIoError) {
   ravel::app::Controller c;
   const fs::path no_such_dir = fs::temp_directory_path() / "ravel_ctrl_no_such_dir" / "f.json";

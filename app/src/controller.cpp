@@ -34,7 +34,7 @@ ControllerResult Controller::Save() {
   return SaveAs(s_.file_path.value());
 }
 
-ControllerResult Controller::SaveAs(const std::filesystem::path& p) {
+ControllerResult Controller::SaveAs(std::filesystem::path p) {
   std::filesystem::path temp = p;
   temp += ".tmp";
 
@@ -63,7 +63,7 @@ ControllerResult Controller::SaveAs(const std::filesystem::path& p) {
     return std::unexpected(ControllerError::IoError);
   }
 
-  s_.file_path = p;
+  s_.file_path = std::move(p);
   s_.saved_bookmark_ = s_.chronicle.bookmark();
   return {};
 }
