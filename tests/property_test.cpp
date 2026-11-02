@@ -108,10 +108,12 @@ bool SnapshotsEqual(const ravel::GraphSnapshot& a, const ravel::GraphSnapshot& b
 
 void RoundTrip(const ravel::Graph& g) {
   std::stringstream stream;
-  ravel::JsonStorage::Save(g.ToSnapshot(), stream);
-  const ravel::Graph restored = ravel::Graph::FromSnapshot(ravel::JsonStorage::Load(stream));
+  ravel::JsonStorage::Save({g.ToSnapshot(), {}}, stream);
+  const ravel::FileDoc doc = ravel::JsonStorage::Load(stream);
+  const ravel::Graph restored = ravel::Graph::FromSnapshot(doc.snapshot);
   EXPECT_TRUE(SnapshotsEqual(restored.ToSnapshot(), g.ToSnapshot(), /*with_next_id=*/true))
       << "round-trip разошёлся с оригиналом";
+  EXPECT_TRUE(doc.allowed_cycles.empty());
 }
 
 void RunFuzz(std::uint32_t seed) {

@@ -14,7 +14,9 @@ ControllerResult Controller::Open(const std::filesystem::path& p) {
   SessionState next;
 
   try {
-    next.g = ravel::Graph::FromSnapshot(ravel::JsonStorage::Load(file));
+    FileDoc cur = ravel::JsonStorage::Load(file);
+    next.g = ravel::Graph::FromSnapshot(cur.snapshot);
+    next.allowed_cycles = cur.allowed_cycles;
     next.chronicle = ravel::app::CommandChronicle{};
     next.file_path = p;
     next.saved_bookmark_ = 0;
@@ -44,7 +46,8 @@ ControllerResult Controller::SaveAs(std::filesystem::path p) {
   }
 
   try {
-    ravel::JsonStorage::Save(s_.g.ToSnapshot(), file);
+    FileDoc src{.snapshot = s_.g.ToSnapshot(), .allowed_cycles = s_.allowed_cycles};
+    ravel::JsonStorage::Save(src, file);
     if (!file) {
       throw std::runtime_error("close failed");
     }
@@ -191,8 +194,20 @@ std::vector<std::string> Controller::RelationTypeNames() const {
   return result;
 }
 
-std::vector<std::vector<RelationId>> Controller::CycleHints() const {
-  return FindCycleHints(s_.g);
+std::vector<std::vector<RelationId>> Controller::CycleHints() {
+  std::vector<std::vector<RelationId>> old_allowed(std::move(s_.allowed_cycles));
+  std::vector<std::vector<RelationId>> actual = FindCycleHints(s_.g);
+
+  for (auto it = actual.begin(); it != actual.end();) {
+    if (std::find(old_allowed.begin(), old_allowed.end(), *it) != old_allowed.end()) {
+      s_.allowed_cycles.push_back(*it);
+      it = actual.erase(it);
+    } else {
+      ++it;
+    }
+  }
+
+  return actual;
 }
 
 }  // namespace ravel::app

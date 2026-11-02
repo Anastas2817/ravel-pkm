@@ -46,7 +46,7 @@ void WriteGraphWithOntology(const fs::path& p) {
   g.AddNodeType("nt", "#112233", "rect", "#445566");
   g.AddRelationType("rt", "#112233", "solid", false, true);
   std::ofstream out(p, std::ios::binary);
-  ravel::JsonStorage::Save(g.ToSnapshot(), out);
+  ravel::JsonStorage::Save({g.ToSnapshot(), {}}, out);
 }
 
 TEST_F(ControllerIoTest, OpenMissingFileReturnsNoPath) {
@@ -171,7 +171,7 @@ void WriteGraphWithTwoNodeTypes(const fs::path& p) {
   g.AddNodeType("nt", "#112233", "rect", "#445566");
   g.AddNodeType("at", "#aabbcc", "oval", "#ddeeff");
   std::ofstream out(p, std::ios::binary);
-  ravel::JsonStorage::Save(g.ToSnapshot(), out);
+  ravel::JsonStorage::Save({g.ToSnapshot(), {}}, out);
 }
 
 TEST(ControllerReadApi, FreshControllerIsEmpty) {
@@ -409,7 +409,7 @@ TEST_F(ControllerIoTest, ChangeNodeTypeChangeResolvesNewStyle) {
     g.AddNodeType("nt", "#112233", "rect", "#445566");
     g.AddNodeType("nt2", "#AABBCC", "oval", "#DDEEFF");
     std::ofstream out(good_path_, std::ios::binary);
-    ravel::JsonStorage::Save(g.ToSnapshot(), out);
+    ravel::JsonStorage::Save({g.ToSnapshot(), {}}, out);
   }
   ravel::app::Controller c;
   ASSERT_TRUE(c.Open(good_path_).has_value());
@@ -480,7 +480,7 @@ TEST_F(ControllerIoTest, ChangeRelationUpdatesTypeAndDescriptionVisibleViaRelati
     g.AddRelationType("rt", "#112233", "solid", false, true);
     g.AddRelationType("rt2", "#AABBCC", "dashed", true, false);
     std::ofstream out(good_path_, std::ios::binary);
-    ravel::JsonStorage::Save(g.ToSnapshot(), out);
+    ravel::JsonStorage::Save({g.ToSnapshot(), {}}, out);
   }
   ravel::app::Controller c;
   ASSERT_TRUE(c.Open(good_path_).has_value());

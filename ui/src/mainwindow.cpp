@@ -2,19 +2,23 @@
 
 #include "add_node_dialog.hpp"
 #include "add_relation_dialog.hpp"
+#include "firefly.hpp"
 #include "node_item.hpp"
 #include "open_node_dialog.hpp"
 #include "open_relation_dialog.hpp"
 #include "relation_item.hpp"
 
 #include <QFileDialog>
-#include <QHash>
 #include <QKeySequence>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QStatusBar>
 #include <QStringList>
+#include <QTimer>
+#include <QVariantAnimation>
+#include <algorithm>
+#include <cmath>
 #include <optional>
 
 namespace ravel::ui {
@@ -141,14 +145,10 @@ void MainWindow::ResyncScene() {
   const std::vector<ravel::app::NodeView> nodes = controller_.Nodes();
   const std::vector<ravel::app::RelationView> relations = controller_.Relations();
 
-  // Index current scene items by model id.
-  QHash<quint64, NodeItem*> items;
-  const QList<QGraphicsItem*> scene_items = scene_->items();
-  for (QGraphicsItem* item : scene_items) {
-    if (auto* node = dynamic_cast<NodeItem*>(item)) {
-      items.insert(node->id(), node);
-    }
-  }
+  QHash<quint64, NodeItem*> old_nodes;
+  old_nodes.swap(node_items_);
+  QHash<quint64, RelationItem*> old_rels;
+  old_rels.swap(relation_items_);
 
   for (const ravel::app::NodeView& view : nodes) {
     // NodeItem rect is center-origin: setPos() places the model position at the
@@ -156,7 +156,7 @@ void MainWindow::ResyncScene() {
     const qreal kWidth = 140.0 * view.size;
     const qreal kHeight = 60.0 * view.size;
     const QRectF rect(-kWidth / 2, -kHeight / 2, kWidth, kHeight);
-    NodeItem* item = items.take(static_cast<quint64>(view.id));
+    NodeItem* item = old_nodes.take(static_cast<quint64>(view.id));
     if (item == nullptr) {
       item = new NodeItem(view.id, QString::fromStdString(view.title),
                           QString::fromStdString(view.type), view.size, rect,
@@ -168,6 +168,7 @@ void MainWindow::ResyncScene() {
       // Per-step geometry broadcast: RelationItems follow the dragged node.
       connect(item, &NodeItem::Moved, this, &MainWindow::OnNodeDragged);
     }
+    node_items_.insert(view.id, item);
     if (view.position.has_value()) {
       const QPointF target(view.position->x_, view.position->y_);
       if (item->pos() != target) {
@@ -190,7 +191,7 @@ void MainWindow::ResyncScene() {
   // Whatever is left in `items` no longer exists in the model. removeItem()
   // passes ownership to the caller, so we delete explicitly (no QObject
   // parent-child for scene items).
-  for (NodeItem* item : items) {
+  for (NodeItem* item : old_nodes) {
     scene_->removeItem(item);
     delete item;
   }
@@ -198,19 +199,14 @@ void MainWindow::ResyncScene() {
   // Reconcile relation items by model id (same pattern as nodes). Geometry is
   // refreshed on every resync; live following during drag is driven by
   // NodeItem::Moved (OnNodeDragged).
-  QHash<quint64, RelationItem*> rel_items;
-  for (QGraphicsItem* item : scene_->items()) {
-    if (auto* rel = dynamic_cast<RelationItem*>(item)) {
-      rel_items.insert(rel->id(), rel);
-    }
-  }
   for (const ravel::app::RelationView& view : relations) {
-    RelationItem* rel = rel_items.take(view.id);
+    RelationItem* rel = old_rels.take(view.id);
     if (rel == nullptr) {
       rel = new RelationItem(view.id, view.from, view.to, QString::fromStdString(view.color),
                              view.arrow, view.symmetric);
       scene_->addItem(rel);
     }
+    relation_items_.insert(view.id, rel);
     const NodeItem* from_item = FindNode(view.from);
     const NodeItem* to_item = FindNode(view.to);
     if (from_item != nullptr && to_item != nullptr) {
@@ -221,13 +217,15 @@ void MainWindow::ResyncScene() {
       rel->Change(rel_type, QString::fromStdString(view.color), view.arrow, view.symmetric);
     }
   }
-  for (RelationItem* rel : rel_items) {
+  for (RelationItem* rel : old_rels) {
     scene_->removeItem(rel);
     delete rel;
   }
+
+  RefreshCycleHints();
 }
 
-QStringList ToQStringList(const std::vector<std::string>& v) {
+static QStringList ToQStringList(const std::vector<std::string>& v) {
   QStringList out;
   out.reserve(static_cast<qsizetype>(v.size()));
   for (const auto& s : v) {
@@ -357,14 +355,7 @@ void MainWindow::OnNodeMoved(std::uint64_t id, QPointF to) {
 }
 
 NodeItem* MainWindow::FindNode(std::uint64_t id) const {
-  for (QGraphicsItem* item : scene_->items()) {
-    if (auto* node = dynamic_cast<NodeItem*>(item)) {
-      if (node->id() == id) {
-        return node;
-      }
-    }
-  }
-  return nullptr;
+  return node_items_.value(id);
 }
 
 void MainWindow::OnNodeDragged(std::uint64_t id, const QPointF& /*new_pos*/) {
@@ -406,5 +397,131 @@ void MainWindow::OnDeleteSelected() {
 
   ResyncScene();
 }
+
+void MainWindow::RefreshCycleHints() {
+  const auto hints = controller_.CycleHints();
+
+  // Collect first, retire after: RetireFireFly take()s the hash entry, so it
+  // must still be present — no mutating the hash mid-iteration.
+  std::vector<FireFly*> dead;
+  const QList<FireFly*> flies = fire_flies_.keys();
+  for (FireFly* ff : flies) {
+    if (std::find(hints.begin(), hints.end(), ff->rels()) == hints.end()) {
+      dead.push_back(ff);
+    }
+  }
+  for (FireFly* ff : dead) {
+     RetireFireFly(ff);
+  }
+
+  for (const std::vector<ravel::RelationId>& hint : hints) {
+    const bool exists = std::any_of(fire_flies_.keyBegin(), fire_flies_.keyEnd(),
+                                    [&](const FireFly* ff) { return ff->rels() == hint; });
+    if (!exists) {
+      CreateFireFly(hint);
+    }
+  }
+}
+
+void MainWindow::CreateFireFly(const std::vector<std::uint64_t>& hint) {
+  auto* ff = new FireFly(hint);
+  scene_->addItem(ff);
+  // Route: three full rounds over the cycle's edges. Captured by value:
+  // `hint` refers to a caller-local that dies before the animation's first tick.
+  std::vector<std::uint64_t> path = hint;
+  // A cycle is born when its newest edge is added and ids grow monotonically,
+  // so the max id in a fresh hint is exactly that edge. Rotate the closed walk
+  // to start there: any rotation of a cycle is still a valid route.
+  const auto newest = std::max_element(path.begin(), path.end());
+  std::rotate(path.begin(), newest, path.end());
+  constexpr int kRounds = 3;
+  auto* flight = new QVariantAnimation(this);
+  // Parameter t runs 0..size*rounds: integer part picks the edge, fraction
+  // picks the point along it. 3000 ms per edge per round.
+  flight->setDuration(3000 * static_cast<int>(path.size()) * kRounds);
+  flight->setStartValue(0.0);
+  flight->setEndValue(static_cast<double>(path.size()) * kRounds);
+  flight->setEasingCurve(QEasingCurve::InOutSine);
+  connect(flight, &QVariantAnimation::valueChanged, this, [this, ff, path](const QVariant& v) {
+    const double t = v.toDouble();
+    const std::size_t edge_idx = static_cast<std::size_t>(std::floor(t)) % path.size();
+    const double frac = t - std::floor(t);
+    RelationItem* rel = relation_items_.value(path[edge_idx]);
+    if (rel == nullptr) {
+      return;
+    }
+    ff->setPos(rel->line().pointAt(frac));
+  });
+  // Resting pulse per advisors: after landing the cycle's edges breathe
+  // (opacity 1.0 -> 0.6 -> 1.0) until the hint goes away.
+  auto* pulse = new QVariantAnimation(this);
+  pulse->setDuration(1600);
+  pulse->setLoopCount(-1);
+  pulse->setEasingCurve(QEasingCurve::InOutSine);
+  pulse->setKeyValueAt(0.0, 1.0);
+  pulse->setKeyValueAt(0.5, 0.35);
+  pulse->setKeyValueAt(1.0, 1.0);
+  connect(pulse, &QVariantAnimation::valueChanged, this, [this, path](const QVariant& v) {
+    for (const std::uint64_t rel_id : path) {
+      if (RelationItem* rel = relation_items_.value(rel_id)) {
+        rel->setOpacity(v.toDouble());
+      }
+    }
+  });
+  connect(flight, &QVariantAnimation::finished, this, [pulse] { pulse->start(); });
+  // The hash owns the animations for the fly's whole lifetime. Do NOT delete on
+  // finished: the hash entry would dangle and the removal branch in
+  // RefreshCycleHints would stop() a dead pointer.
+  fire_flies_.insert(ff, {flight, pulse});
+  // Defer past the press dispatch: accepting the press made the scene this
+  // item's mouse grabber, and deleting it from inside the event handler
+  // would leave a dangling grabber (crash at scene destruction).
+  ff->on_clicked = [this, ff] {
+     QTimer::singleShot(0, this, [this, ff] { OnFireFlyClicked(ff); });
+  };
+  flight->start();
+}
+
+
+void MainWindow::RetireFireFly(FireFly* ff) {
+  const FlyAnims anims = fire_flies_.take(ff);
+  // Stop before deleting: a running animation would still tick valueChanged
+  // into the dead item.
+  anims.flight->stop();
+  delete anims.flight;
+  if (anims.pulse != nullptr) {
+    anims.pulse->stop();
+    delete anims.pulse;
+  }
+  // A stopped pulse may have left the edges dimmed: restore them.
+  for (const std::uint64_t rel_id : ff->rels()) {
+    if (RelationItem* rel = relation_items_.value(rel_id)) {
+      rel->setOpacity(1.0);
+    }
+  }
+  scene_->removeItem(ff);
+  delete ff;
+}
+
+
+void MainWindow::OnFireFlyClicked(FireFly* ff) {
+  // "Нет" — кнопка по умолчанию: пометка необратима до удаления рёбер, Enter
+  // не должен срабатывать случайно.
+  const auto answer = QMessageBox::question(
+      this, tr("Циклическая связь"),
+      tr("Пометить этот цикл как допустимый?\nСветлячок больше не будет появляться."),
+      QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+  if (answer != QMessageBox::Yes) {
+    return;
+  }
+  controller_.MarkCycleAllowed(ff->rels());
+  // The press was accepted, so the scene may hold ff as the mouse grabber —
+  // release the grab before deleting, else the grabber pointer dangles.
+  if (scene_->mouseGrabberItem() == ff) {
+    ff->ungrabMouse();
+  }
+  RetireFireFly(ff);
+}
+
 
 }  // namespace ravel::ui

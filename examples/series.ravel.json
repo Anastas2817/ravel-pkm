@@ -1,0 +1,58 @@
+{
+  "allowed_cycles": [],
+  "format_version": 3,
+  "next_id_node": 1,
+  "next_id_relation": 1,
+  "node_types": [
+    {
+      "color": "#4A4B4F",
+      "frame_color": "#FFFFFF",
+      "name": "function",
+      "shape": "rounded_rect"
+    },
+    {
+      "color": "#618A49",
+      "frame_color": "#FFFFFF",
+      "name": "model",
+      "shape": "rounded_rect"
+    },
+    {
+      "color": "#7A543A",
+      "frame_color": "#FFFFFF",
+      "name": "property",
+      "shape": "rounded_rect"
+    },
+    {
+      "color": "#2D8C9E",
+      "frame_color": "#FFFFFF",
+      "name": "theorem",
+      "shape": "rounded_rect"
+    }
+  ],
+  "nodes": [],
+  "positions": [],
+  "relation_types": [
+    {
+      "arrow": "dotted",
+      "color": "#FFFFFF",
+      "name": "has_part",
+      "symmetric": false,
+      "transitive": true
+    },
+    {
+      "arrow": "solid",
+      "color": "#FFFFFF",
+      "name": "is_a",
+      "symmetric": false,
+      "transitive": true
+    },
+    {
+      "arrow": "solid",
+      "color": "#618A49",
+      "name": "is_defined_on",
+      "symmetric": false,
+      "transitive": false
+    }
+  ],
+  "relations": []
+}

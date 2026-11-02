@@ -1,19 +1,43 @@
 {
-  "allowed_cycles": [],
+  "allowed_cycles": [
+    [
+      26,
+      25,
+      22
+    ],
+    [
+      31,
+      26,
+      25,
+      30
+    ]
+  ],
   "format_version": 3,
-  "next_id_node": 8,
-  "next_id_relation": 7,
+  "next_id_node": 30,
+  "next_id_relation": 35,
   "node_types": [
     {
-      "color": "#C36765",
-      "frame_color": "#000000",
+      "color": "#4A4B4F",
+      "frame_color": "#FFFFFF",
       "name": "function",
+      "shape": "oval"
+    },
+    {
+      "color": "#618A49",
+      "frame_color": "#FFFFFF",
+      "name": "model",
       "shape": "rounded_rect"
     },
     {
-      "color": "#6F3742",
+      "color": "#7A543A",
       "frame_color": "#FFFFFF",
-      "name": "model",
+      "name": "property",
+      "shape": "rounded_rect"
+    },
+    {
+      "color": "#2D8C9E",
+      "frame_color": "#FFFFFF",
+      "name": "theorem",
       "shape": "rounded_rect"
     }
   ],
@@ -24,14 +48,16 @@
       "type": "model"
     },
     {
+      "description": "теория функций комплексного переменного",
       "id": 2,
+      "size": 0.8,
       "title": "ТФКП",
-      "type": "function"
+      "type": "model"
     },
     {
       "id": 3,
       "title": "Алгебра",
-      "type": "function"
+      "type": "model"
     },
     {
       "id": 4,
@@ -52,41 +78,172 @@
       "id": 7,
       "title": "Теория вероятностей",
       "type": "model"
+    },
+    {
+      "id": 8,
+      "title": "Теорема Пифагора",
+      "type": "theorem"
+    },
+    {
+      "id": 9,
+      "title": "коммутативность",
+      "type": "property"
+    },
+    {
+      "id": 14,
+      "size": 0.9999999999999997,
+      "title": "факториал",
+      "type": "function"
+    },
+    {
+      "id": 15,
+      "title": "dcgjsmhc",
+      "type": "function"
+    },
+    {
+      "description": "Поток вектора напряженности через произвольный замкнутый контур ",
+      "id": 17,
+      "title": "Теорема Гаусса",
+      "type": "theorem"
+    },
+    {
+      "description": "Матерть Божья",
+      "id": 18,
+      "size": 0.5,
+      "title": "Атрибут ",
+      "type": "property"
+    },
+    {
+      "description": "Война",
+      "id": 19,
+      "title": "Модель Мальтуса",
+      "type": "model"
+    },
+    {
+      "id": 21,
+      "title": "1",
+      "type": "model"
+    },
+    {
+      "id": 22,
+      "title": "2",
+      "type": "model"
+    },
+    {
+      "id": 23,
+      "title": "3",
+      "type": "model"
+    },
+    {
+      "id": 25,
+      "title": "",
+      "type": "function"
+    },
+    {
+      "id": 26,
+      "title": "",
+      "type": "function"
+    },
+    {
+      "id": 28,
+      "title": "",
+      "type": "function"
+    },
+    {
+      "id": 29,
+      "title": "Теорема Коши",
+      "type": "theorem"
     }
   ],
   "positions": [
     {
-      "x": -248.0,
-      "y": -302.0
+      "x": -265.266375,
+      "y": -215.14912500000003
     },
     {
-      "x": 66.0,
-      "y": -211.0
+      "x": -100.92296249999995,
+      "y": 268.01875
     },
     {
-      "x": -7.0,
-      "y": 55.0
+      "x": 77.38118124999994,
+      "y": 267.75350000000003
     },
     {
-      "x": -368.0,
-      "y": 114.0
+      "x": -469.4703108695652,
+      "y": 272.87509592391297
     },
     {
-      "x": 222.0,
-      "y": 12.0
+      "x": 174.05004612771734,
+      "y": -190.1949973913045
     },
     {
-      "x": 281.0,
-      "y": -228.0
+      "x": 280.46769375,
+      "y": 445.2913624999998
     },
     {
-      "x": 169.0,
-      "y": -330.0
+      "x": -279.01140625000005,
+      "y": 270.8027562499998
+    },
+    {
+      "x": 308.29758342391295,
+      "y": -71.06130407608697
+    },
+    {
+      "x": 162.00670625,
+      "y": -328.31557499999997
+    },
+    {
+      "x": 4.261413043478342,
+      "y": 418.3862934782608
+    },
+    {
+      "x": -350.1772863437499,
+      "y": -419.6696771718747
+    },
+    {
+      "x": 708.3198777173915,
+      "y": 168.46546956521732
+    },
+    {
+      "x": 568.6738499999997,
+      "y": -284.1065871874999
+    },
+    {
+      "x": 339.46490624999996,
+      "y": -532.8386999999999
+    },
+    {
+      "x": -1073.7881765117181,
+      "y": -155.71424506328117
+    },
+    {
+      "x": -812.9604048296868,
+      "y": 141.4838929617188
+    },
+    {
+      "x": -1318.1763825726553,
+      "y": 290.4583424406248
+    },
+    {
+      "x": -595.0103958695306,
+      "y": -569.0129483437493
+    },
+    {
+      "x": -542.1329085390622,
+      "y": -215.8024479109373
+    },
+    {
+      "x": -1021.5125659570305,
+      "y": -471.55176132031215
+    },
+    {
+      "x": -752.247588125,
+      "y": -130.7382171874999
     }
   ],
   "relation_types": [
     {
-      "arrow": "solid",
+      "arrow": "dotted",
       "color": "#FFFFFF",
       "name": "has_part",
       "symmetric": false,
@@ -101,7 +258,7 @@
     },
     {
       "arrow": "solid",
-      "color": "#FFFFFF",
+      "color": "#618A49",
       "name": "is_defined_on",
       "symmetric": false,
       "transitive": false
@@ -124,6 +281,122 @@
       "from": 1,
       "id": 6,
       "to": 7,
+      "type": "has_part"
+    },
+    {
+      "from": 1,
+      "id": 7,
+      "to": 4,
+      "type": "has_part"
+    },
+    {
+      "from": 1,
+      "id": 8,
+      "to": 3,
+      "type": "has_part"
+    },
+    {
+      "from": 4,
+      "id": 9,
+      "to": 8,
+      "type": "is_defined_on"
+    },
+    {
+      "description": "n!",
+      "from": 14,
+      "id": 11,
+      "to": 5,
+      "type": "is_a"
+    },
+    {
+      "from": 19,
+      "id": 12,
+      "to": 18,
+      "type": "has_part"
+    },
+    {
+      "from": 19,
+      "id": 13,
+      "to": 9,
+      "type": "is_defined_on"
+    },
+    {
+      "description": "Не связано никак",
+      "from": 19,
+      "id": 14,
+      "to": 17,
+      "type": "is_defined_on"
+    },
+    {
+      "from": 22,
+      "id": 16,
+      "to": 23,
+      "type": "has_part"
+    },
+    {
+      "from": 25,
+      "id": 22,
+      "to": 26,
+      "type": "has_part"
+    },
+    {
+      "from": 23,
+      "id": 24,
+      "to": 21,
+      "type": "has_part"
+    },
+    {
+      "from": 28,
+      "id": 25,
+      "to": 25,
+      "type": "has_part"
+    },
+    {
+      "from": 26,
+      "id": 26,
+      "to": 28,
+      "type": "has_part"
+    },
+    {
+      "from": 21,
+      "id": 27,
+      "to": 29,
+      "type": "has_part"
+    },
+    {
+      "from": 29,
+      "id": 29,
+      "to": 22,
+      "type": "has_part"
+    },
+    {
+      "from": 25,
+      "id": 30,
+      "to": 15,
+      "type": "has_part"
+    },
+    {
+      "from": 15,
+      "id": 31,
+      "to": 26,
+      "type": "has_part"
+    },
+    {
+      "from": 9,
+      "id": 32,
+      "to": 15,
+      "type": "has_part"
+    },
+    {
+      "from": 15,
+      "id": 33,
+      "to": 19,
+      "type": "has_part"
+    },
+    {
+      "from": 18,
+      "id": 34,
+      "to": 9,
       "type": "has_part"
     }
   ]

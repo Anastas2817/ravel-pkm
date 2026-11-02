@@ -12,11 +12,12 @@ using nlohmann::json;
 
 namespace ravel {
 
-void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
+void JsonStorage::Save(const FileDoc& f, std::ostream& out) {
   if (!out) {
     throw std::runtime_error("JsonStorage::Save: output stream is in fail state");
   }
   json j;
+  GraphSnapshot g = f.snapshot;
   j["format_version"] = kFormatVersion;
   j["next_id_node"] = g.next_id_node;
   j["next_id_relation"] = g.next_id_relation;
@@ -90,7 +91,10 @@ void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
     }
   }
 
-  j["allowed_cycles"] = json::array();  // TODO week 6
+  j["allowed_cycles"] = json::array();
+  for (const auto& cycle : f.allowed_cycles) {
+    j["allowed_cycles"].push_back(cycle);
+  }
 
   out << j.dump(2);
 
@@ -99,7 +103,7 @@ void JsonStorage::Save(const GraphSnapshot& g, std::ostream& out) {
   }
 }
 
-GraphSnapshot JsonStorage::Load(std::istream& in) {
+FileDoc JsonStorage::Load(std::istream& in) {
   if (!in) {
     throw std::runtime_error("JsonStorage::Load: input stream is in fail state");
   }
@@ -149,13 +153,15 @@ GraphSnapshot JsonStorage::Load(std::istream& in) {
       }
     }
 
-    if (j.contains("allowed_cycles") && !j.at("allowed_cycles").is_array()) {
-      throw std::runtime_error("JsonStorage::Load: allowed_cycles is not an array");
+    std::vector<std::vector<RelationId>> allowed_cycles;
+    for (const json& el : j.at("allowed_cycles")) {
+      allowed_cycles.push_back(el.get<std::vector<RelationId>>());
     }
+
     if (!in) {
       throw std::runtime_error("JsonStorage::Load: stream error");
     }
-    return g;
+    return FileDoc{.snapshot = g, .allowed_cycles = allowed_cycles};
   } catch (const json::exception& e) {
     throw std::runtime_error(std::string("JsonStorage::Load: ") + e.what());
   }

@@ -15,17 +15,20 @@ class RelationItem : public QGraphicsItem {
   RelationItem(std::uint64_t id, std::uint64_t from, std::uint64_t to, QString color,
                std::string arrow, bool symmetric);
 
-  std::uint64_t id() const {
+  std::uint64_t id() const noexcept {
     return id_;
   }
-  std::uint64_t from() const {
+  std::uint64_t from() const noexcept {
     return from_;
   }
-  std::uint64_t to() const {
+  std::uint64_t to() const noexcept {
     return to_;
   }
-  QString GetType() const {
+  QString GetType() const noexcept {
     return type_;
+  }
+  QLineF line() const noexcept {
+    return line_;
   }
 
   [[nodiscard]] QRectF boundingRect() const override;

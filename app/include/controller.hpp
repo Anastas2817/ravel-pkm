@@ -70,11 +70,15 @@ class Controller {
   std::optional<RelationView> FindRelation(ravel::RelationId id) const;
   std::vector<std::string> RelationTypeNames() const;
 
-  std::vector<std::vector<RelationId>> CycleHints() const;
+  std::vector<std::vector<RelationId>> CycleHints();
+  void MarkCycleAllowed(std::vector<RelationId> hint) {
+    s_.allowed_cycles.push_back(hint);
+  }
 
  private:
   struct SessionState {
     ravel::Graph g;
+    std::vector<std::vector<ravel::RelationId>> allowed_cycles;
     ravel::app::CommandChronicle chronicle;
     std::optional<std::filesystem::path> file_path = std::nullopt;
 

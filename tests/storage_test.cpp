@@ -38,8 +38,8 @@ TEST(StorageLoadSave, RoundTrip) {
   src.relations.push_back(Relation(1, 4, 1, "reduce_to"));
 
   std::stringstream saved;
-  JsonStorage::Save(src, saved);
-  GraphSnapshot dest = JsonStorage::Load(saved);
+  JsonStorage::Save({src, {}}, saved);
+  GraphSnapshot dest = JsonStorage::Load(saved).snapshot;
 
   EXPECT_EQ(src.next_id_node, dest.next_id_node);
   EXPECT_EQ(src.next_id_relation, dest.next_id_relation);
@@ -55,8 +55,8 @@ TEST(StorageLoadSave, RoundTrip) {
 TEST(StorageLoadSave, ValidEmpty) {
   GraphSnapshot src;
   std::stringstream saved;
-  JsonStorage::Save(src, saved);
-  GraphSnapshot dest = JsonStorage::Load(saved);
+  JsonStorage::Save({src, {}}, saved);
+  GraphSnapshot dest = JsonStorage::Load(saved).snapshot;
 
   const NodeId kStandardNodeIdValue = 1;      // implementation: R1/R2
   const NodeId kStandardRelationIdValue = 1;  // implementation: R1/R2
@@ -86,8 +86,8 @@ TEST(StorageLoadSave, SurvivalOfLoners) {
   src.positions.push_back(std::nullopt);
 
   std::stringstream saved;
-  JsonStorage::Save(src, saved);
-  GraphSnapshot dest = JsonStorage::Load(saved);
+  JsonStorage::Save({src, {}}, saved);
+  GraphSnapshot dest = JsonStorage::Load(saved).snapshot;
 
   EXPECT_EQ(src.next_id_node, dest.next_id_node);
   EXPECT_EQ(src.next_id_relation, dest.next_id_relation);
@@ -1045,7 +1045,7 @@ TEST(StorageSave, FailStateStream) {
   std::stringstream ss;
   ss.setstate(std::ios::failbit);
   GraphSnapshot g;
-  EXPECT_THROW(JsonStorage::Save(g, ss), std::runtime_error);
+  EXPECT_THROW(JsonStorage::Save({g, {}}, ss), std::runtime_error);
 }
 
 TEST(StorageLoad, RepeatedNodeTypeName) {
