@@ -17,7 +17,7 @@ void JsonStorage::Save(const FileDoc& f, std::ostream& out) {
     throw std::runtime_error("JsonStorage::Save: output stream is in fail state");
   }
   json j;
-  GraphSnapshot g = f.snapshot;
+  const GraphSnapshot g = f.snapshot;
   j["format_version"] = kFormatVersion;
   j["next_id_node"] = g.next_id_node;
   j["next_id_relation"] = g.next_id_relation;
