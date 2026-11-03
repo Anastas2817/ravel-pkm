@@ -78,7 +78,7 @@ ctest --test-dir build -C Release --output-on-failure
 |---|---|
 | Модель данных `Graph` | ✅ закрыто (неделя 1: юнит-тесты на инварианты + property-based фаззер: 25 сидов × 150 случайных операций, оракулы полного undo, redo и round-trip) |
 | Сериализация JSON | ✅ закрыто (неделя 2: `JsonStorage` Load/Save, round-trip) |
-| Канвас (QGraphicsView) | ✅ закрыто (недели 4–5): создание узлов (двойной клик) и связей (Ctrl+drag + диалог типа), перемещение, удаление (Ctrl+D / Delete, rubber-band), стили узлов и связей из онтологии |
+| Канвас (QGraphicsView) | ✅ закрыто (недели 4–5): создание узлов (двойной клик) и связей (Ctrl+drag + диалог типа), перемещение, удаление (Ctrl+D / Delete, rubber-band), зум (Ctrl+колесо, 0.2–5.0, якорь под курсором) и скролл колесом (Shift — горизонтально), стили узлов и связей из онтологии |
 | Слой команд (app) | ✅ закрыто: `AnyCommand` (variant + concept), `CommandChronicle` (один вектор + курсор; Execute/Undo/Redo), 6 команд; решения — implementation.md R14, R17–R18 |
 | Controller (app) | ✅ Open/Save/SaveAs через JsonStorage (атомарный SaveAs) + мутации через команды; покрыто тестами |
 | Раскладка (Сугияма с онтологическими лентами) | 🔨 в работе (текущий фокус, неделя 7: этап 3a) |
