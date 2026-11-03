@@ -23,11 +23,7 @@ void JsonStorage::Save(const FileDoc& f, std::ostream& out) {
   j["next_id_relation"] = g.next_id_relation;
 
   j["node_types"] = json::array();
-  std::vector<std::pair<std::string, NodeType>> node_types(g.ontology_node.begin(),
-                                                           g.ontology_node.end());
-  std::sort(node_types.begin(), node_types.end(),
-            [](const auto& a, const auto& b) { return a.first < b.first; });
-  for (const auto& [name, node_type] : node_types) {
+  for (const auto& [name, node_type] : g.ontology_node) {
     json type;
     type["name"] = name;
     type["color"] = node_type.color();
@@ -37,11 +33,7 @@ void JsonStorage::Save(const FileDoc& f, std::ostream& out) {
   }
 
   j["relation_types"] = json::array();
-  std::vector<std::pair<std::string, RelationType>> relation_types(g.ontology_relation.begin(),
-                                                                   g.ontology_relation.end());
-  std::sort(relation_types.begin(), relation_types.end(),
-            [](const auto& a, const auto& b) { return a.first < b.first; });
-  for (const auto& [name, relation_type] : relation_types) {
+  for (const auto& [name, relation_type] : g.ontology_relation) {
     json type;
     type["name"] = name;
     type["color"] = relation_type.color();
