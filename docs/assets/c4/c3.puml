@@ -48,13 +48,13 @@ package "Storage" {
 
 Win --> Ctrl : действие пользователя
 Ctrl --> Chron : Execute / Undo / Redo
+Session --> Chron : хранит
 Chron --> Cmd : Do / Undo
 Cmd --> Graph : command-мутации
-Ctrl --> Graph : read-модель
+Session --> Graph : хранит
 Ctrl --> Algo : запросы анализа (циклы, R20)
-Algo --> Ctrl : подсказки (светлячки)
-Ctrl --> Win : NodeView / RelationView
-Ctrl --> Win : подсказки (светлячки)
+Ctrl --> JsonS : сохранение/загрузка
+Win --> Ctrl : NodeView / RelationView
 Win --> Items : reconcile (Change-in-place)
 Canvas --> Win : жесты (double-click, drag)
 Dlg --> Win : принятые значения
