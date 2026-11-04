@@ -27,7 +27,7 @@ tools/jdk-21.0.12.1+1-jre/bin/java -jar tools/plantuml.jar -Playout=smetana -cha
 ├─────────────────────────────────────────────┤
 │  Core (чистый C++23, без Qt)                │
 │  Graph · GraphSnapshot · Position ·         │
-│  Layout (план) · Algorithms (план)          │
+│  Layout (план) · Algorithms                 │
 ├─────────────────────────────────────────────┤
 │  Storage                                    │
 │  JsonStorage (потоки, format_version)       │
@@ -78,7 +78,7 @@ tools/jdk-21.0.12.1+1-jre/bin/java -jar tools/plantuml.jar -Playout=smetana -cha
 | `GraphSnapshot` | Core | переносить состояние Graph между слоями без знания формата | реализован |
 | `Position` | Core | DTO координат узла; `positions_` параллелен `nodes_` (ADR-003) | реализован |
 | `Layout` | Core | преобразовывать граф в пространственную раскладку — выдавать координаты | запланирован (этап 3) |
-| `Algorithms` | Core | анализировать структуру Graph: DFS, циклы (read-only подсказки, R20) | запланирован (этап 3) |
+| `Algorithms` | Core | анализировать структуру Graph: DFS, циклы (read-only подсказки, R20) | реализован |
 | `JsonStorage` | Storage | сериализация/десериализация, валидация формата и версии | реализован (потоки) |
 | `Controller` | App | обслуживать сценарии пользователя: все мутации через команды, чтение через DTO, Open/Save/SaveAs | реализован (этап 2; команды — досрочно): 6 команд, undo/redo в UI; Change*/Find* — команды и DTO-запросы, no-op гварды сняты (переходное состояние R15 закрыто) |
 | `Command` + `CommandChronicle` | App | оформлять мутации с откатом; летопись с курсором (один вектор + bookmark, не два стека) | реализован: 6 команд, undo/redo подключены к UI досрочно (недели 5 и 9 закрыты) |
@@ -199,7 +199,7 @@ ravel-pkm/
       зафиксирован в комментарии.
 - [ ] **Расширение `AnyCommand` требует правки `command.hpp`** (variant,
       `static_assert`). ⚠️ Осознанно: вариант «type-erasure через
-      ICommandInterface» рассмотрен и отклонён в пользу простоты; при росте
+      ICommand» рассмотрен и отклонён в пользу простоты; при росте
       числа команд >8–10 пересмотреть.
 - [ ] **`JsonStorage` знает формат целиком; новый `format_version` = правка
       файла.** ⚠️ Осознанное отклонение: риск локализован — версия — одна
