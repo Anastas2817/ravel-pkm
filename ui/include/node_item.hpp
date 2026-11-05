@@ -37,6 +37,15 @@ class NodeItem : public QGraphicsObject {
   // at the border instead of being hidden under the node.
   [[nodiscard]] QPointF AnchorTowards(const QPointF& other_center) const;
 
+  void SetShadowSize(quint8 overflow) {
+    prepareGeometryChange();
+    shadow_ = overflow;
+    update();
+  }
+  [[nodiscard]] quint8 shadow() const {
+    return shadow_;
+  }
+
  signals:
   void Moved(std::uint64_t id, const QPointF& new_pos);
   void MoveFinished(std::uint64_t id, const QPointF& pos);
@@ -61,6 +70,8 @@ class NodeItem : public QGraphicsObject {
   QPointF drag_start_;
   QRectF rect_;
   QGraphicsLineItem* rel_ = nullptr;
+
+  quint8 shadow_ = 0;
 };
 
 }  // namespace ravel::ui

@@ -42,7 +42,11 @@ void NodeItem::SetRect(const QRectF& r, double size) {
 }
 
 QRectF NodeItem::boundingRect() const {
-  return rect_;
+  if (shadow_ == 0) {
+    return rect_;
+  }
+  const qreal k = shadow_;
+  return rect_.adjusted(0, 0, 3.0 * k + 4.0 * k, 3.0 * k + 4.0 * k);
 }
 
 QPointF NodeItem::AnchorTowards(const QPointF& other_center) const {
@@ -64,19 +68,42 @@ QPointF NodeItem::AnchorTowards(const QPointF& other_center) const {
 
 void NodeItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*option*/,
                      QWidget* /*widget*/) {
-  painter->setRenderHint(QPainter::Antialiasing);
+  const auto draw_shape = [this, painter](const QRectF& r) {
+    if (shape_ == "rect") {
+      painter->drawRect(r);
+    } else if (shape_ == "rounded_rect") {
+      painter->drawRoundedRect(r, 10, 10);
+    } else if (shape_ == "oval") {
+      painter->drawEllipse(r);
+    }
+  };
+
+  // shadow
+  if (shadow_ > 0) {
+    const qreal k = shadow_;
+    const QRectF base = rect_.translated(3.0 * k, 3.0 * k);
+    constexpr QColor kShadowColor(64, 64, 64);
+    painter->save();
+    painter->setPen(Qt::NoPen);
+    const int blur = static_cast<int>(4.0 * k);
+    for (int i = blur; i >= 0; --i) {
+      QColor c = kShadowColor;
+      c.setAlphaF(0.35 * (1.0 - qreal(i) / (blur + 1)));
+      painter->setBrush(c);
+      draw_shape(base.adjusted(0, 0, i, i));
+    }
+    painter->restore();
+  }
+
+  // shape
+  painter->setBrush(QColor(color_));
+  painter->setPen(QColor(frame_color_));
+  draw_shape(rect_);
+
+  // text
   QFont f = painter->font();
   f.setPointSizeF(f.pointSizeF() * size_);
   painter->setFont(f);
-  painter->setBrush(QColor(color_));
-  painter->setPen(QColor(frame_color_));
-  if (shape_ == "rect") {
-    painter->drawRect(rect_);
-  } else if (shape_ == "rounded_rect") {
-    painter->drawRoundedRect(rect_, 10, 10);
-  } else if (shape_ == "oval") {
-    painter->drawEllipse(rect_);
-  }
   painter->drawText(rect_, Qt::AlignCenter, title_);
 }
 

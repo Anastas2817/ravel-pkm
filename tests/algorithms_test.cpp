@@ -4,7 +4,6 @@
 
 #include "algorithms.hpp"
 
-#include <map>
 #include <utility>
 #include <vector>
 
@@ -194,37 +193,47 @@ std::pair<Graph, NodeId> MakeStar(std::size_t spokes) {
 
 using ravel::FindHubHints;
 
+// Плотная проекция: hints[id] = перелёт за порог (0 = не хаб); размер =
+// next_id_node (слот 0 всегда 0 — id с 1). Итерация по карте не нужна:
+// потребитель UI ходит по item'ам и читает свой индекс.
+using ravel::FindHubHints;
+
 TEST(FindHubHints, BelowThresholdNoHint) {
   auto [g, center] = MakeStar(kShadowStart - 1);
-  EXPECT_TRUE(FindHubHints(g).empty());
+  EXPECT_EQ(FindHubHints(g)[center], 0);
 }
 
 TEST(FindHubHints, AtThresholdYieldsOverflowOne) {
   auto [g, center] = MakeStar(kShadowStart);
-  EXPECT_EQ(FindHubHints(g), (std::map<NodeId, std::size_t>{{center, 1}}));
+  EXPECT_EQ(FindHubHints(g)[center], 1);
 }
 
 TEST(FindHubHints, OverflowIsCountedBeyondThreshold) {
   auto [g, center] = MakeStar(kShadowStart + 2);
   // value — «перелёт за порог» для градации тени: 8 связей -> 3.
-  EXPECT_EQ(FindHubHints(g), (std::map<NodeId, std::size_t>{{center, 3}}));
+  EXPECT_EQ(FindHubHints(g)[center], 3);
 }
 
 TEST(FindHubHints, LeavesAreNotHubs) {
   auto [g, center] = MakeStar(kShadowStart);
-  const std::map<NodeId, std::size_t> hints = FindHubHints(g);
-  ASSERT_EQ(hints.size(), 1);
-  EXPECT_EQ(hints.begin()->first, center);
+  const std::vector<std::uint8_t> hints = FindHubHints(g);
+  ASSERT_EQ(hints.size(), g.next_id_node());
+  EXPECT_EQ(hints[center], 1);
+  for (std::size_t leaf = 1; leaf < hints.size(); ++leaf) {
+    if (leaf != center) {
+      EXPECT_EQ(hints[leaf], 0);
+    }
+  }
 }
 
 TEST(FindHubHints, SelfLoopCountsOncePerAdr004) {
   auto [g, center] = MakeStar(kShadowStart - 2);
   g.AddRelation(center, center, "is_a");
   // 4 спицы + петля (= 1 связь по ADR-004) = 5 — тени нет.
-  EXPECT_TRUE(FindHubHints(g).empty());
+  EXPECT_EQ(FindHubHints(g)[center], 0);
   g.AddRelation(center, center, "is_a");
   // 6 — тень с перелётом 1.
-  EXPECT_EQ(FindHubHints(g), (std::map<NodeId, std::size_t>{{center, 1}}));
+  EXPECT_EQ(FindHubHints(g)[center], 1);
 }
 
 TEST(FindHubHints, DeletedRelationsDropTheHint) {
@@ -237,8 +246,22 @@ TEST(FindHubHints, DeletedRelationsDropTheHint) {
     const NodeId leaf = g.AddNode("leaf", "model");
     rels.push_back(g.AddRelation(center, leaf, "is_a"));
   }
-  ASSERT_EQ(FindHubHints(g).count(center), 1);
+  ASSERT_EQ(FindHubHints(g)[center], 1);
   // Soft-delete (ADR-002): живые рёбра перестают считаться — тень снимается.
   g.DeleteRelations({rels[0], rels[1]});
-  EXPECT_TRUE(FindHubHints(g).empty());
+  EXPECT_EQ(FindHubHints(g)[center], 0);
+}
+
+TEST(FindHubHints, DegreeSaturatesAtUint8Max) {
+  // Лимит проекта 10³ связей на узел переполнил бы uint8_t: счётчик
+  // насыщается, «больше 255» для градации тени неразличимо (UI клампит).
+  Graph g;
+  g.AddNodeType("model", "#4a90d9", "rect", "#000000");
+  g.AddRelationType("is_a", "#3ba895", "solid", false, true);
+  const NodeId center = g.AddNode("center", "model");
+  for (int i = 0; i < 260; ++i) {
+    const NodeId leaf = g.AddNode("leaf", "model");
+    g.AddRelation(center, leaf, "is_a");
+  }
+  EXPECT_EQ(FindHubHints(g)[center], 255 - kShadowStart + 1);
 }

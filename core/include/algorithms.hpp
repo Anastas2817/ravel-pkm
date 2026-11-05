@@ -3,13 +3,13 @@
 
 #include "graph.hpp"
 
+#include <cstdint>
 #include <vector>
-#include <map>
 
 namespace ravel {
 
 std::vector<std::vector<RelationId>> FindCycleHints(const Graph& g);
-std::map<NodeId, std::size_t> FindHubHints(const Graph& g);
+std::vector<std::uint8_t> FindHubHints(const Graph& g);
 
 }  // namespace ravel
 

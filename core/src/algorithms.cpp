@@ -160,18 +160,25 @@ std::vector<std::vector<RelationId>> FindCycleHints(const Graph& g) {
 
 constexpr std::size_t kShadowStart = 6;
 
-std::map<NodeId, std::size_t> FindHubHints(const Graph& g) {
-  std::vector<std::size_t> deg(g.next_id_node(), 0);
-  std::map<NodeId, std::size_t> result;
-  g.ForEachLiveRelation([&deg, &result](const Relation& r) {
-    if (++deg[r.from()] >= kShadowStart) {
-      result[r.from()]++;
+std::vector<std::uint8_t> FindHubHints(const Graph& g) {
+  const NodeId sz = g.next_id_node();
+  std::vector<std::uint8_t> result(sz, 0);
+  g.ForEachLiveRelation([&result](const Relation& r) {
+    if (result[r.from()] != std::numeric_limits<std::uint8_t>::max()) {
+      ++result[r.from()];
     }
-    if (r.to() != r.from() && ++deg[r.to()] >= kShadowStart) {
-      result[r.to()]++;
+    if (r.to() != r.from() && result[r.to()] != std::numeric_limits<std::uint8_t>::max()) {
+      ++result[r.to()];
     }
     return true;
   });
+  for (NodeId i = 0; i < sz; ++i) {
+    if (result[i] >= kShadowStart) {
+      result[i] = static_cast<std::uint8_t>(result[i] - kShadowStart + 1);
+    } else {
+      result[i] = 0;
+    }
+  }
   return result;
 }
 

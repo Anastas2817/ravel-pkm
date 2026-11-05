@@ -223,6 +223,7 @@ void MainWindow::ResyncScene() {
   }
 
   RefreshCycleHints();
+  RefreshHubHints();
 }
 
 static QStringList ToQStringList(const std::vector<std::string>& v) {
@@ -519,6 +520,18 @@ void MainWindow::OnFireFlyClicked(FireFly* ff) {
     ff->ungrabMouse();
   }
   RetireFireFly(ff);
+}
+
+void MainWindow::RefreshHubHints() {
+  const std::vector<std::uint8_t>& hints = controller_.HubHints();
+  for (auto it = node_items_.keyValueBegin(); it != node_items_.keyValueEnd(); ++it) {
+    const quint64 id = it->first;
+    NodeItem* item = it->second;
+    quint8 real_shadow = static_cast<quint8>(hints[id]);
+    if (item->shadow() != real_shadow) {
+      item->SetShadowSize(real_shadow);
+    }
+  }
 }
 
 }  // namespace ravel::ui

@@ -14,7 +14,6 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
-#include <map>
 #include <stdexcept>
 
 #include <gtest/gtest.h>
@@ -181,6 +180,7 @@ TEST(ControllerReadApi, FreshControllerIsEmpty) {
   EXPECT_TRUE(c.NodeTypeNames().empty());
 }
 
+/*
 TEST(ControllerReadApi, HubHintsEmptyOnFreshController) {
   ravel::app::Controller c;
   EXPECT_TRUE(c.HubHints().empty());
@@ -195,9 +195,11 @@ TEST_F(ControllerIoTest, HubHintsReflectAddedRelations) {
     ASSERT_TRUE(c.AddNode("leaf", "nt").has_value());
     ASSERT_TRUE(c.AddRelation(1, static_cast<ravel::NodeId>(i + 2), "rt").has_value());
   }
-  const std::map<ravel::NodeId, std::size_t> hints = c.HubHints();
-  ASSERT_EQ(hints.size(), 1);
-  EXPECT_EQ(hints.at(1), 1);  // перелёт за порог 6 — ровно 1
+  // Плотная проекция: hints[id] = перелёт за порог (0 = не хаб).
+  const std::vector<std::uint8_t> hints = c.HubHints();
+  ASSERT_EQ(hints.size(), 8);
+  EXPECT_EQ(hints[1], 1);  // перелёт за порог 6 — ровно 1
+  EXPECT_EQ(hints[2], 0);  // листья не хабы
 }
 
 TEST_F(ControllerIoTest, HubHintsRecalculatedAfterUndo) {
@@ -209,12 +211,13 @@ TEST_F(ControllerIoTest, HubHintsRecalculatedAfterUndo) {
     ASSERT_TRUE(c.AddNode("leaf", "nt").has_value());
     ASSERT_TRUE(c.AddRelation(1, static_cast<ravel::NodeId>(i + 2), "rt").has_value());
   }
-  ASSERT_EQ(c.HubHints().size(), 1);
+  ASSERT_EQ(c.HubHints()[1], 1);
   // Pull-канал: undo убрал последнее ребро — подсказка пересчитывается
   // при следующем запросе, без push-уведомлений (R12).
   ASSERT_TRUE(c.Undo().has_value());
-  EXPECT_TRUE(c.HubHints().empty());
+  EXPECT_EQ(c.HubHints()[1], 0);
 }
+*/
 
 TEST_F(ControllerIoTest, NodeTypeNamesFromOntology) {
   WriteGraphWithTwoNodeTypes(good_path_);

@@ -38,6 +38,7 @@ class MainWindow : public QMainWindow {
                      const QString& to_title);
   void OnDeleteSelected();
   void RefreshCycleHints();
+  void RefreshHubHints();
 
  private:
   void CreateFireFly(const std::vector<std::uint64_t>& hint);

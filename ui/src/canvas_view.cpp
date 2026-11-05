@@ -7,6 +7,7 @@ namespace ravel::ui {
 CanvasView::CanvasView(QWidget* parent) : QGraphicsView(parent) {
   setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
   setDragMode(QGraphicsView::RubberBandDrag);
+  setRenderHint(QPainter::Antialiasing);
 }
 
 void CanvasView::wheelEvent(QWheelEvent* e) {
