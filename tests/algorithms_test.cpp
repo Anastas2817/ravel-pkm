@@ -4,6 +4,10 @@
 
 #include "algorithms.hpp"
 
+#include <map>
+#include <utility>
+#include <vector>
+
 #include <gtest/gtest.h>
 
 using ravel::FindCycleHints;
@@ -165,4 +169,76 @@ TEST(GraphResolveRelationIds, LookupValidationAndEmptyMatch) {
   EXPECT_THROW(g.ResolveRelationIds(a, b, "is_a"), std::invalid_argument);
   EXPECT_THROW(g.ResolveRelationIds(b, a, "is_a"), std::invalid_argument);
   EXPECT_THROW(g.ResolveRelationIds(a, a, "unknown"), std::invalid_argument);
+}
+
+namespace {
+
+// Граница порога намеренно продублирована из algorithms.cpp (kShadowStart):
+// тест закрепляет калибровку, случайная смена константы упадёт здесь.
+constexpr std::size_t kShadowStart = 6;
+
+// Звезда: center + spokes листьев, рёбра center -> leaf.
+std::pair<Graph, NodeId> MakeStar(std::size_t spokes) {
+  Graph g;
+  g.AddNodeType("model", "#4a90d9", "rect", "#000000");
+  g.AddRelationType("is_a", "#3ba895", "solid", false, true);
+  const NodeId center = g.AddNode("center", "model");
+  for (std::size_t i = 0; i < spokes; ++i) {
+    const NodeId leaf = g.AddNode("leaf", "model");
+    g.AddRelation(center, leaf, "is_a");
+  }
+  return {std::move(g), center};
+}
+
+}  // namespace
+
+using ravel::FindHubHints;
+
+TEST(FindHubHints, BelowThresholdNoHint) {
+  auto [g, center] = MakeStar(kShadowStart - 1);
+  EXPECT_TRUE(FindHubHints(g).empty());
+}
+
+TEST(FindHubHints, AtThresholdYieldsOverflowOne) {
+  auto [g, center] = MakeStar(kShadowStart);
+  EXPECT_EQ(FindHubHints(g), (std::map<NodeId, std::size_t>{{center, 1}}));
+}
+
+TEST(FindHubHints, OverflowIsCountedBeyondThreshold) {
+  auto [g, center] = MakeStar(kShadowStart + 2);
+  // value — «перелёт за порог» для градации тени: 8 связей -> 3.
+  EXPECT_EQ(FindHubHints(g), (std::map<NodeId, std::size_t>{{center, 3}}));
+}
+
+TEST(FindHubHints, LeavesAreNotHubs) {
+  auto [g, center] = MakeStar(kShadowStart);
+  const std::map<NodeId, std::size_t> hints = FindHubHints(g);
+  ASSERT_EQ(hints.size(), 1);
+  EXPECT_EQ(hints.begin()->first, center);
+}
+
+TEST(FindHubHints, SelfLoopCountsOncePerAdr004) {
+  auto [g, center] = MakeStar(kShadowStart - 2);
+  g.AddRelation(center, center, "is_a");
+  // 4 спицы + петля (= 1 связь по ADR-004) = 5 — тени нет.
+  EXPECT_TRUE(FindHubHints(g).empty());
+  g.AddRelation(center, center, "is_a");
+  // 6 — тень с перелётом 1.
+  EXPECT_EQ(FindHubHints(g), (std::map<NodeId, std::size_t>{{center, 1}}));
+}
+
+TEST(FindHubHints, DeletedRelationsDropTheHint) {
+  Graph g;
+  g.AddNodeType("model", "#4a90d9", "rect", "#000000");
+  g.AddRelationType("is_a", "#3ba895", "solid", false, true);
+  const NodeId center = g.AddNode("center", "model");
+  std::vector<RelationId> rels;
+  for (std::size_t i = 0; i < kShadowStart; ++i) {
+    const NodeId leaf = g.AddNode("leaf", "model");
+    rels.push_back(g.AddRelation(center, leaf, "is_a"));
+  }
+  ASSERT_EQ(FindHubHints(g).count(center), 1);
+  // Soft-delete (ADR-002): живые рёбра перестают считаться — тень снимается.
+  g.DeleteRelations({rels[0], rels[1]});
+  EXPECT_TRUE(FindHubHints(g).empty());
 }

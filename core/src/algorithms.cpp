@@ -158,4 +158,21 @@ std::vector<std::vector<RelationId>> FindCycleHints(const Graph& g) {
   return result;
 }
 
+constexpr std::size_t kShadowStart = 6;
+
+std::map<NodeId, std::size_t> FindHubHints(const Graph& g) {
+  std::vector<std::size_t> deg(g.next_id_node(), 0);
+  std::map<NodeId, std::size_t> result;
+  g.ForEachLiveRelation([&deg, &result](const Relation& r) {
+    if (++deg[r.from()] >= kShadowStart) {
+      result[r.from()]++;
+    }
+    if (r.to() != r.from() && ++deg[r.to()] >= kShadowStart) {
+      result[r.to()]++;
+    }
+    return true;
+  });
+  return result;
+}
+
 }  // namespace ravel

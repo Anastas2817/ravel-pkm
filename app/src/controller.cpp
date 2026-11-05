@@ -211,4 +211,8 @@ std::vector<std::vector<RelationId>> Controller::CycleHints() {
   return actual;
 }
 
+std::map<NodeId, std::size_t> Controller::HubHints() {
+  return FindHubHints(s_.g);
+}
+
 }  // namespace ravel::app

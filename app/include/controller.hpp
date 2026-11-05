@@ -6,6 +6,7 @@
 #include "storage.hpp"
 
 #include <filesystem>
+#include <map>
 #include <optional>
 #include <string>
 #include <vector>
@@ -74,6 +75,7 @@ class Controller {
   void MarkCycleAllowed(const std::vector<RelationId>& hint) {
     s_.allowed_cycles.push_back(hint);
   }
+  std::map<NodeId, std::size_t> HubHints();
 
  private:
   struct SessionState {

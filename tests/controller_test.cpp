@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <stdexcept>
 
 #include <gtest/gtest.h>
@@ -178,6 +179,41 @@ TEST(ControllerReadApi, FreshControllerIsEmpty) {
   ravel::app::Controller c;
   EXPECT_TRUE(c.Nodes().empty());
   EXPECT_TRUE(c.NodeTypeNames().empty());
+}
+
+TEST(ControllerReadApi, HubHintsEmptyOnFreshController) {
+  ravel::app::Controller c;
+  EXPECT_TRUE(c.HubHints().empty());
+}
+
+TEST_F(ControllerIoTest, HubHintsReflectAddedRelations) {
+  WriteGraphWithOntology(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("hub", "nt").has_value());  // id 1
+  for (int i = 0; i < 6; ++i) {
+    ASSERT_TRUE(c.AddNode("leaf", "nt").has_value());
+    ASSERT_TRUE(c.AddRelation(1, static_cast<ravel::NodeId>(i + 2), "rt").has_value());
+  }
+  const std::map<ravel::NodeId, std::size_t> hints = c.HubHints();
+  ASSERT_EQ(hints.size(), 1);
+  EXPECT_EQ(hints.at(1), 1);  // перелёт за порог 6 — ровно 1
+}
+
+TEST_F(ControllerIoTest, HubHintsRecalculatedAfterUndo) {
+  WriteGraphWithOntology(good_path_);
+  ravel::app::Controller c;
+  ASSERT_TRUE(c.Open(good_path_).has_value());
+  ASSERT_TRUE(c.AddNode("hub", "nt").has_value());  // id 1
+  for (int i = 0; i < 6; ++i) {
+    ASSERT_TRUE(c.AddNode("leaf", "nt").has_value());
+    ASSERT_TRUE(c.AddRelation(1, static_cast<ravel::NodeId>(i + 2), "rt").has_value());
+  }
+  ASSERT_EQ(c.HubHints().size(), 1);
+  // Pull-канал: undo убрал последнее ребро — подсказка пересчитывается
+  // при следующем запросе, без push-уведомлений (R12).
+  ASSERT_TRUE(c.Undo().has_value());
+  EXPECT_TRUE(c.HubHints().empty());
 }
 
 TEST_F(ControllerIoTest, NodeTypeNamesFromOntology) {
