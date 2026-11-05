@@ -211,7 +211,7 @@ std::vector<std::vector<RelationId>> Controller::CycleHints() {
   return actual;
 }
 
-std::vector<uint8_t> Controller::HubHints() {
+std::vector<uint8_t> Controller::HubHints() const {
   return FindHubHints(s_.g);
 }
 

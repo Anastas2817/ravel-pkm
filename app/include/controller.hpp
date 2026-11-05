@@ -75,7 +75,7 @@ class Controller {
   void MarkCycleAllowed(const std::vector<RelationId>& hint) {
     s_.allowed_cycles.push_back(hint);
   }
-  std::vector<std::uint8_t> HubHints();
+  std::vector<std::uint8_t> HubHints() const;
 
  private:
   struct SessionState {
